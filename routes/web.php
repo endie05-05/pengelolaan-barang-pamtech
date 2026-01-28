@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\MaterialRequestController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TemplateController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -37,22 +40,27 @@ Route::post('/logout', function (Request $request) {
 })->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    // Dashboard
+    Route::get('/dashboard', [ReportController::class, 'dashboard'])->name('dashboard');
     
+    // Items Management
     Route::resource('items', ItemController::class);
     
-    // Project routes (mockup)
-    Route::get('/projects', function () {
-        return view('projects.index');
-    })->name('projects.index');
+    // Material Requests
+    Route::resource('requests', MaterialRequestController::class)->except(['edit', 'update', 'destroy']);
+    Route::post('/requests/{materialRequest}/checkout', [MaterialRequestController::class, 'checkout'])->name('requests.checkout');
+    Route::get('/requests/{materialRequest}/checkin', [MaterialRequestController::class, 'checkinForm'])->name('requests.checkin.form');
+    Route::post('/requests/{materialRequest}/checkin', [MaterialRequestController::class, 'checkin'])->name('requests.checkin');
     
-    Route::get('/projects/create', function () {
-        return view('projects.create');
-    })->name('projects.create');
+    // Templates
+    Route::resource('templates', TemplateController::class);
+    Route::get('/api/templates/{template}/items', [MaterialRequestController::class, 'getTemplateItems'])->name('api.template.items');
     
-    Route::get('/projects/{id}', function ($id) {
-        return view('projects.show');
-    })->name('projects.show');
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/loss-damage', [ReportController::class, 'lossAndDamage'])->name('loss-damage');
+        Route::get('/stock-movement', [ReportController::class, 'stockMovement'])->name('stock-movement');
+        Route::get('/tool-utilization', [ReportController::class, 'toolUtilization'])->name('tool-utilization');
+    });
 });
+

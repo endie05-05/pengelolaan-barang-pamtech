@@ -14,7 +14,7 @@ class ProjectTemplate extends Model
 
     public function items()
     {
-        return $this->hasMany(TemplateItem::class, 'template_id');
+        return $this->hasMany(TemplateItem::class, 'project_template_id');
     }
 
     public function projects()
