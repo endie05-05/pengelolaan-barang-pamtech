@@ -13,6 +13,18 @@
         </a>
     </div>
 
+    @if(session('success'))
+    <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700">
+        {{ session('success') }}
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+        {{ session('error') }}
+    </div>
+    @endif
+
     <!-- Filters -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6">
         <form action="{{ route('requests.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4">
@@ -80,28 +92,20 @@
                         </td>
                         <td class="px-6 py-4 text-slate-600">{{ $request->created_at->format('d M Y') }}</td>
                         <td class="px-6 py-4">
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('requests.show', $request) }}" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Detail">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
+                                <a href="{{ route('requests.show', $request) }}" class="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors">
+                                    Detail
                                 </a>
-                                @if($request->canCheckout())
-                                <a href="{{ route('requests.show', $request) }}" class="p-2 text-green-600 hover:text-green-800 transition-colors" title="Checkout">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                    </svg>
-                                </a>
-                                @endif
-                                @if($request->canCheckin())
-                                <a href="{{ route('requests.checkin.form', $request) }}" class="p-2 text-blue-600 hover:text-blue-800 transition-colors" title="Check-in">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                    </svg>
-                                </a>
-                                @endif
-                            </div>
+                                
+                                <form action="{{ route('requests.destroy', $request) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus request ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="p-2 text-red-400 hover:text-red-600 transition-colors" title="Hapus">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </form>
+
                         </td>
                     </tr>
                     @empty

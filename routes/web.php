@@ -47,7 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('items', ItemController::class);
     
     // Material Requests
-    Route::resource('requests', MaterialRequestController::class)->except(['edit', 'update', 'destroy']);
+    Route::resource('requests', MaterialRequestController::class)->except(['edit', 'update'])->parameter('requests', 'materialRequest');
     Route::post('/requests/{materialRequest}/checkout', [MaterialRequestController::class, 'checkout'])->name('requests.checkout');
     Route::get('/requests/{materialRequest}/checkin', [MaterialRequestController::class, 'checkinForm'])->name('requests.checkin.form');
     Route::post('/requests/{materialRequest}/checkin', [MaterialRequestController::class, 'checkin'])->name('requests.checkin');
@@ -57,9 +57,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/templates/{template}/items', [MaterialRequestController::class, 'getTemplateItems'])->name('api.template.items');
     
     // Reports
-    Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::name('reports.')->group(function () {
         Route::get('/loss-damage', [ReportController::class, 'lossAndDamage'])->name('loss-damage');
+        Route::get('/pdf/unified', [ReportController::class, 'exportUnifiedPdf'])->name('pdf.unified');
+         
         Route::get('/stock-movement', [ReportController::class, 'stockMovement'])->name('stock-movement');
+        Route::get('/stock-movement/pdf', [ReportController::class, 'exportStockMovementPdf'])->name('stock-movement.pdf');
+        
         Route::get('/tool-utilization', [ReportController::class, 'toolUtilization'])->name('tool-utilization');
     });
 });

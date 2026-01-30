@@ -181,12 +181,12 @@
                     @if($materialRequest->departure_date)
                     <div>
                         <dt class="text-sm text-slate-500">Tanggal Berangkat</dt>
-                        <dd class="font-medium text-slate-800">{{ $materialRequest->departure_date->format('d M Y') }}</dd>
+<dd class="font-medium text-slate-800">{{ $materialRequest->departure_date?->format('d M Y') ?? '-' }}</dd>
                     </div>
                     @endif
                     <div>
                         <dt class="text-sm text-slate-500">Dibuat</dt>
-                        <dd class="font-medium text-slate-800">{{ $materialRequest->created_at->format('d M Y H:i') }}</dd>
+<dd class="font-medium text-slate-800">{{ $materialRequest->created_at?->format('d M Y H:i') ?? '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-sm text-slate-500">Oleh</dt>
@@ -208,7 +208,7 @@
                         </div>
                         <div class="ml-3">
                             <p class="text-sm font-medium text-slate-800">Request dibuat</p>
-                            <p class="text-xs text-slate-500">{{ $materialRequest->created_at->format('d M Y H:i') }}</p>
+<p class="text-xs text-slate-500">{{ $materialRequest->created_at?->format('d M Y H:i') ?? '-' }}</p>
                         </div>
                     </div>
 
@@ -221,7 +221,7 @@
                         </div>
                         <div class="ml-3">
                             <p class="text-sm font-medium text-slate-800">Check-out</p>
-                            <p class="text-xs text-slate-500">{{ $materialRequest->checkout_at->format('d M Y H:i') }} oleh {{ $materialRequest->checkoutUser->name ?? '-' }}</p>
+<p class="text-xs text-slate-500">{{ $materialRequest->checkout_at?->format('d M Y H:i') ?? '-' }} oleh {{ $materialRequest->checkoutUser->name ?? '-' }}</p>
                         </div>
                     </div>
                     @endif
@@ -235,7 +235,7 @@
                         </div>
                         <div class="ml-3">
                             <p class="text-sm font-medium text-slate-800">Check-in / Rekonsiliasi</p>
-                            <p class="text-xs text-slate-500">{{ $materialRequest->checkin_at->format('d M Y H:i') }} oleh {{ $materialRequest->checkinUser->name ?? '-' }}</p>
+<p class="text-xs text-slate-500">{{ $materialRequest->checkin_at?->format('d M Y H:i') ?? '-' }} oleh {{ $materialRequest->checkinUser->name ?? '-' }}</p>
                         </div>
                     </div>
                     @endif

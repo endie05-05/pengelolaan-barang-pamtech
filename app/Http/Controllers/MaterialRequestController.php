@@ -47,7 +47,7 @@ class MaterialRequestController extends Controller
     public function create(Request $request)
     {
         $templates = ProjectTemplate::with('items.item')->get();
-        $items = Item::where('stock', '>', 0)->orderBy('name')->get();
+        $items = Item::with('category')->where('stock', '>', 0)->orderBy('name')->get();
         $selectedTemplate = null;
 
         if ($request->filled('template_id')) {
@@ -304,5 +304,29 @@ class MaterialRequestController extends Controller
         });
 
         return response()->json($items);
+    }
+    /**
+     * Remove the specified material request from storage.
+     */
+    public function destroy(MaterialRequest $materialRequest)
+    {
+        // Allow delete if pending OR corrupted (null status)
+        if ($materialRequest->status !== MaterialRequest::STATUS_PENDING && !is_null($materialRequest->status)) {
+            return back()->with('error', 'Hanya request dengan status Pending yang dapat dihapus. Status saat ini: ' . $materialRequest->status);
+        }
+
+        try {
+            DB::transaction(function () use ($materialRequest) {
+                // Manually delete items first
+                $materialRequest->items()->delete();
+                $materialRequest->delete();
+            });
+    
+            return redirect()->route('requests.index')
+                ->with('success', 'Request berhasil dihapus.');
+                
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
+        }
     }
 }

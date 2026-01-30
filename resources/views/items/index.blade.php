@@ -49,7 +49,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SKU / Nama</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kategori</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Barcode</th>
+
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Stok</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
@@ -68,7 +68,7 @@
                                         {{ $item->category->name ?? '-' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{{ $item->barcode ?? '-' }}</td>
+
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
                                     {{ $item->stock }} / <span class="text-slate-500">min {{ $item->min_stock }}</span>
                                 </td>
