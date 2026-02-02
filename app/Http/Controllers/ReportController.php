@@ -192,9 +192,9 @@ class ReportController extends Controller
                 ->sum('qty'),
         ];
 
-        $recentRequests = MaterialRequest::with(['creator', 'template'])
+        $recentRequests = MaterialRequest::with(['creator', 'template', 'items.item'])
             ->latest()
-            ->take(5)
+            ->take(10)
             ->get();
 
         $lowStockItems = Item::with('category')

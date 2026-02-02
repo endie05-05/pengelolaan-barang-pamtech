@@ -9,35 +9,37 @@
         
         <!-- Tab Navigation -->
         <div class="mb-6 border-b border-slate-200">
-            <nav class="flex space-x-8" aria-label="Tabs">
-                <button 
-                    @click="activeTab = 'loss_damage'" 
-                    :class="activeTab === 'loss_damage' ? 'border-[#006600] text-[#006600]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    Kerusakan & Kehilangan
-                </button>
-                <button 
-                    @click="activeTab = 'stock_movement'" 
-                    :class="activeTab === 'stock_movement' ? 'border-[#006600] text-[#006600]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    Mutasi Stok
-                </button>
-                <button 
-                    @click="activeTab = 'tool_utilization'" 
-                    :class="activeTab === 'tool_utilization' ? 'border-[#006600] text-[#006600]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    Penggunaan Alat
-                </button>
-                <button 
-                    @click="activeTab = 'export_pdf'" 
-                    :class="activeTab === 'export_pdf' ? 'border-[#006600] text-[#006600]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
-                    class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2">
+            <div class="flex items-center justify-between">
+                <nav class="flex space-x-8" aria-label="Tabs">
+                    <button 
+                        @click="activeTab = 'loss_damage'" 
+                        :class="activeTab === 'loss_damage' ? 'border-[#006600] text-[#006600]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Kerusakan & Kehilangan
+                    </button>
+                    <button 
+                        @click="activeTab = 'stock_movement'" 
+                        :class="activeTab === 'stock_movement' ? 'border-[#006600] text-[#006600]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Mutasi Stok
+                    </button>
+                    <button 
+                        @click="activeTab = 'tool_utilization'" 
+                        :class="activeTab === 'tool_utilization' ? 'border-[#006600] text-[#006600]' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Penggunaan Alat
+                    </button>
+                </nav>
+                
+                <!-- Export PDF Button -->
+                <a href="{{ route('reports.pdf.unified') }}" target="_blank" 
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-[#006600] text-white text-sm font-medium rounded-xl hover:bg-[#005500] transition-colors shadow-sm">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Export PDF
-                </button>
-            </nav>
+                </a>
+            </div>
         </div>
 
         <!-- Tab 1: Loss & Damage -->
@@ -352,56 +354,6 @@
                 {{ $tools->appends(['tab' => 'tool_utilization'])->links() }}
             </div>
             @endif
-        </div>
-
-        <!-- Tab 4: Export PDF -->
-        <div x-show="activeTab === 'export_pdf'" 
-             x-transition:enter="transition ease-out duration-200" 
-             x-transition:enter-start="opacity-0 translate-y-2" 
-             x-transition:enter-end="opacity-100 translate-y-0"
-             @if($activeTab !== 'export_pdf') style="display: none;" @endif>
-            
-            <div class="max-w-xl mx-auto mt-12 text-center" x-data="{ showConfirmation: false }">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-                    <div class="h-16 w-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    
-                    <h2 class="text-xl font-bold text-slate-800 mb-2">Export Laporan Lengkap</h2>
-                    <p class="text-slate-500 mb-8">
-                        Fitur ini akan mengunduh semua laporan (Kerusakan, Mutasi, Penggunaan Alat) dalam satu file PDF.
-                    </p>
-
-                    <button @click="showConfirmation = true" class="px-8 py-3 bg-[#006600] text-white font-medium rounded-xl hover:bg-[#005500] transition-colors inline-flex items-center shadow-lg shadow-green-900/20">
-                        <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Download PDF Laporan
-                    </button>
-                    
-                    <!-- Confirmation Modal -->
-                    <div x-show="showConfirmation" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
-                        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 transform transition-all" @click.away="showConfirmation = false">
-                            <h3 class="text-lg font-bold text-slate-900 mb-4">Persetujuan Admin</h3>
-                            <p class="text-slate-600 mb-6 text-left">
-                                Apakah Anda yakin ingin mengunduh laporan lengkap ini? Tindakan ini akan dicatat dalam sistem.
-                            </p>
-                            
-                            <div class="flex justify-end gap-3">
-                                <button @click="showConfirmation = false" class="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors">
-                                    Batal
-                                </button>
-                                <a href="{{ route('reports.pdf.unified') }}" @click="showConfirmation = false" target="_blank" class="px-6 py-2 bg-[#006600] text-white font-medium rounded-xl hover:bg-[#005500] transition-colors">
-                                    Ya, Setuju & Download
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
         </div>
 
     </div>

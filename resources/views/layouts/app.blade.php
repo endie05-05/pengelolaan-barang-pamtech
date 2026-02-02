@@ -56,20 +56,20 @@
                     Daftar Barang
                 </a>
 
-                <!-- Request Barang -->
+                <!-- Barang Keluar -->
                 <a href="{{ route('requests.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl {{ request()->routeIs('requests.*') ? 'text-[#006600] bg-[#6eea8e]/20' : 'text-slate-600 hover:bg-slate-50 hover:text-[#006600]' }} transition-all">
                     <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    Request Barang
+                    Barang Keluar
                 </a>
 
-                <!-- Paket Proyek -->
+                <!-- Kit Proyek -->
                 <a href="{{ route('templates.index') }}" class="flex items-center px-4 py-3 text-sm font-medium rounded-xl {{ request()->routeIs('templates.*') ? 'text-[#006600] bg-[#6eea8e]/20' : 'text-slate-600 hover:bg-slate-50 hover:text-[#006600]' }} transition-all">
                     <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                     </svg>
-                    Paket Proyek
+                    Kit Proyek
                 </a>
 
                 <!-- Laporan -->
