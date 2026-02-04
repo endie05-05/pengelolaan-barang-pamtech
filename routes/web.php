@@ -51,6 +51,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/requests/{materialRequest}/checkout', [MaterialRequestController::class, 'checkout'])->name('requests.checkout');
     Route::get('/requests/{materialRequest}/checkin', [MaterialRequestController::class, 'checkinForm'])->name('requests.checkin.form');
     Route::post('/requests/{materialRequest}/checkin', [MaterialRequestController::class, 'checkin'])->name('requests.checkin');
+    Route::get('/requests/{materialRequest}/edit-reconciliation', [MaterialRequestController::class, 'editReconciliation'])->name('requests.edit-reconciliation');
+    Route::put('/requests/{materialRequest}/update-reconciliation', [MaterialRequestController::class, 'updateReconciliation'])->name('requests.update-reconciliation');
     
     // Templates
     Route::resource('templates', TemplateController::class);

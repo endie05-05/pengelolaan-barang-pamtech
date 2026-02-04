@@ -13,22 +13,38 @@ class ItemController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Item::with('category');
+        // Build base query for non-tools items
+        $itemsQuery = Item::with('category')->where('item_type', '!=', Item::TYPE_TOOLS);
+        
+        // Build base query for tools
+        $toolsQuery = Item::with('category')->where('item_type', Item::TYPE_TOOLS);
         
         // Category filter
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $itemsQuery->where('category_id', $request->category_id);
+            $toolsQuery->where('category_id', $request->category_id);
         }
         
         // Search
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $search = '%' . $request->search . '%';
+            $itemsQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', $search)->orWhere('code', 'like', $search);
+            });
+            $toolsQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', $search)->orWhere('code', 'like', $search);
+            });
         }
         
-        $items = $query->latest()->paginate(15);
-        $categories = Category::all();
+        $items = $itemsQuery->latest()->paginate(15, ['*'], 'items_page');
+        $tools = $toolsQuery->latest()->paginate(15, ['*'], 'tools_page');
+        // Exclude 'Tools' category from dropdown since tools have separate tab
+        $categories = Category::where('name', '!=', 'Tools')->get();
         
-        return view('items.index', compact('items', 'categories'));
+        // Active tab (default to items)
+        $activeTab = $request->get('tab', 'items');
+        
+        return view('items.index', compact('items', 'tools', 'categories', 'activeTab'));
     }
 
     /**

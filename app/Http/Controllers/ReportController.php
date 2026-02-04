@@ -192,9 +192,22 @@ class ReportController extends Controller
                 ->sum('qty'),
         ];
 
-        $recentRequests = MaterialRequest::with(['creator', 'template', 'items.item'])
+        // Active projects (pending, checked_out, returned)
+        $activeRequests = MaterialRequest::with(['creator', 'template', 'items.item'])
+            ->whereIn('status', [
+                MaterialRequest::STATUS_PENDING,
+                MaterialRequest::STATUS_CHECKED_OUT,
+                MaterialRequest::STATUS_RETURNED
+            ])
             ->latest()
             ->take(10)
+            ->get();
+
+        // Completed projects (closed)
+        $completedRequests = MaterialRequest::with(['creator', 'template', 'items.item'])
+            ->where('status', MaterialRequest::STATUS_CLOSED)
+            ->latest()
+            ->take(5)
             ->get();
 
         $lowStockItems = Item::with('category')
@@ -203,7 +216,7 @@ class ReportController extends Controller
             ->take(5)
             ->get();
 
-        return view('dashboard', compact('stats', 'recentRequests', 'lowStockItems'));
+        return view('dashboard', compact('stats', 'activeRequests', 'completedRequests', 'lowStockItems'));
     }
     /**
      * Export Loss & Damage Report PDF

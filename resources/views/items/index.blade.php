@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="space-y-6">
+    <div class="space-y-6" x-data="{ activeTab: '{{ $activeTab }}' }">
         <!-- Header with Actions -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -17,6 +17,7 @@
         <!-- Filters -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <form method="GET" action="{{ route('items.index') }}" class="flex flex-col sm:flex-row gap-4">
+                <input type="hidden" name="tab" :value="activeTab">
                 <div class="flex-1">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama barang..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
@@ -41,72 +42,180 @@
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">{{ session('success') }}</div>
         @endif
 
-        <!-- Items Table -->
+        <!-- Tab Navigation -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SKU / Nama</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kategori</th>
-
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Stok</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-slate-200">
-                        @forelse($items as $item)
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-xs text-slate-500">{{ $item->code }}</div>
-                                    <div class="text-sm font-medium text-slate-900">{{ $item->name }}</div>
-                                    <div class="text-xs text-slate-400">{{ $item->unit }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">
-                                        {{ $item->category->name ?? '-' }}
-                                    </span>
-                                </td>
-
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
-                                    {{ $item->stock }} / <span class="text-slate-500">min {{ $item->min_stock }}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($item->stock <= $item->min_stock)
-                                        <span class="px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">Kritis</span>
-                                    @else
-                                        <span class="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">Aman</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <a href="{{ route('items.edit', $item) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                        <form action="{{ route('items.destroy', $item) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus item ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-slate-500">
-                                    <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                    </svg>
-                                    <p class="mt-2">Belum ada barang</p>
-                                    <a href="{{ route('items.create') }}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-700">Tambah barang pertama →</a>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="border-b border-slate-200">
+                <nav class="flex -mb-px">
+                    <button type="button"
+                        @click="activeTab = 'items'"
+                        :class="activeTab === 'items' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                        class="flex-1 sm:flex-none px-6 py-4 text-sm font-medium border-b-2 focus:outline-none transition-colors">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            <span>Barang</span>
+                            <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">{{ $items->total() }}</span>
+                        </div>
+                    </button>
+                    <button type="button"
+                        @click="activeTab = 'tools'"
+                        :class="activeTab === 'tools' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                        class="flex-1 sm:flex-none px-6 py-4 text-sm font-medium border-b-2 focus:outline-none transition-colors">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>Tools</span>
+                            <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">{{ $tools->total() }}</span>
+                        </div>
+                    </button>
+                </nav>
             </div>
-            @if($items->hasPages())
-                <div class="px-6 py-4 border-t border-slate-200">{{ $items->links() }}</div>
-            @endif
+
+            <!-- Items Tab Content -->
+            <div x-show="activeTab === 'items'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SKU / Nama</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kategori</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Stok</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            @forelse($items as $item)
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-xs text-slate-500">{{ $item->code }}</div>
+                                        <div class="text-sm font-medium text-slate-900">{{ $item->name }}</div>
+                                        <div class="text-xs text-slate-400">{{ $item->unit }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">
+                                            {{ $item->category->name ?? '-' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
+                                        {{ $item->stock }} / <span class="text-slate-500">min {{ $item->min_stock }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if($item->stock <= $item->min_stock)
+                                            <span class="px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">Kritis</span>
+                                        @else
+                                            <span class="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">Aman</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="{{ route('items.edit', $item) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                            <form action="{{ route('items.destroy', $item) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus item ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                                        <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                        </svg>
+                                        <p class="mt-2">Belum ada barang</p>
+                                        <a href="{{ route('items.create') }}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-700">Tambah barang pertama →</a>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                @if($items->hasPages())
+                    <div class="px-6 py-4 border-t border-slate-200">{{ $items->appends(request()->except('items_page'))->links() }}</div>
+                @endif
+            </div>
+
+            <!-- Tools Tab Content -->
+            <div x-show="activeTab === 'tools'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SKU / Nama</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kategori</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jumlah</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            @forelse($tools as $tool)
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs text-slate-500">{{ $tool->code }}</div>
+                                                <div class="text-sm font-medium text-slate-900">{{ $tool->name }}</div>
+                                                <div class="text-xs text-slate-400">{{ $tool->unit }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
+                                            {{ $tool->category->name ?? 'Tools' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
+                                        {{ $tool->stock }} <span class="text-slate-500">{{ $tool->unit }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if($tool->stock <= $tool->min_stock)
+                                            <span class="px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">Perlu Restok</span>
+                                        @else
+                                            <span class="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">Tersedia</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="{{ route('items.edit', $tool) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                            <form action="{{ route('items.destroy', $tool) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus tool ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                                        <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <p class="mt-2">Belum ada tools</p>
+                                        <a href="{{ route('items.create') }}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-700">Tambah tools pertama →</a>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                @if($tools->hasPages())
+                    <div class="px-6 py-4 border-t border-slate-200">{{ $tools->appends(request()->except('tools_page'))->links() }}</div>
+                @endif
+            </div>
         </div>
     </div>
 </x-app-layout>

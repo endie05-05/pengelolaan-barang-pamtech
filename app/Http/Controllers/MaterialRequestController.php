@@ -18,27 +18,36 @@ class MaterialRequestController extends Controller
      */
     public function index(Request $request)
     {
-        $query = MaterialRequest::with(['template', 'creator', 'items.item'])
+        // Build base query for active requests (all except closed)
+        $activeQuery = MaterialRequest::with(['template', 'creator', 'items.item'])
+            ->where('status', '!=', MaterialRequest::STATUS_CLOSED)
             ->latest();
-
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        
+        // Build base query for completed requests (closed only)
+        $completedQuery = MaterialRequest::with(['template', 'creator', 'items.item'])
+            ->where('status', MaterialRequest::STATUS_CLOSED)
+            ->latest();
 
         // Search by project name or technician
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $activeQuery->where(function ($q) use ($search) {
+                $q->where('project_name', 'like', "%{$search}%")
+                  ->orWhere('technician_name', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
+            });
+            $completedQuery->where(function ($q) use ($search) {
                 $q->where('project_name', 'like', "%{$search}%")
                   ->orWhere('technician_name', 'like', "%{$search}%")
                   ->orWhere('location', 'like', "%{$search}%");
             });
         }
 
-        $requests = $query->paginate(15);
+        $requests = $activeQuery->paginate(15, ['*'], 'active_page');
+        $completedRequests = $completedQuery->paginate(15, ['*'], 'completed_page');
+        $activeTab = $request->get('tab', 'active');
 
-        return view('requests.index', compact('requests'));
+        return view('requests.index', compact('requests', 'completedRequests', 'activeTab'));
     }
 
     /**
@@ -328,5 +337,119 @@ class MaterialRequestController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Show edit reconciliation form for closed requests
+     */
+    public function editReconciliation(MaterialRequest $materialRequest)
+    {
+        if ($materialRequest->status !== MaterialRequest::STATUS_CLOSED) {
+            return back()->with('error', 'Hanya proyek yang sudah selesai yang dapat diedit rekonsiliasinya.');
+        }
+
+        $materialRequest->load(['items.item.category']);
+
+        return view('requests.edit-reconciliation', compact('materialRequest'));
+    }
+
+    /**
+     * Update reconciliation data for closed requests
+     */
+    public function updateReconciliation(Request $request, MaterialRequest $materialRequest)
+    {
+        if ($materialRequest->status !== MaterialRequest::STATUS_CLOSED) {
+            return back()->with('error', 'Hanya proyek yang sudah selesai yang dapat diedit rekonsiliasinya.');
+        }
+
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:material_request_items,id',
+            'items.*.qty_used' => 'required|integer|min:0',
+            'items.*.qty_returned' => 'required|integer|min:0',
+            'items.*.qty_damaged' => 'required|integer|min:0',
+            'items.*.qty_lost' => 'required|integer|min:0',
+            'items.*.notes' => 'nullable|string',
+        ]);
+
+        DB::transaction(function () use ($validated, $materialRequest) {
+            foreach ($validated['items'] as $itemData) {
+                $requestItem = MaterialRequestItem::find($itemData['id']);
+                $item = $requestItem->item;
+
+                // Calculate difference from previous values
+                $oldReturned = $requestItem->qty_returned ?? 0;
+                $oldDamaged = $requestItem->qty_damaged ?? 0;
+                $oldLost = $requestItem->qty_lost ?? 0;
+
+                $newReturned = $itemData['qty_returned'];
+                $newDamaged = $itemData['qty_damaged'];
+                $newLost = $itemData['qty_lost'];
+
+                // Adjust stock based on difference in returned qty
+                $returnedDiff = $newReturned - $oldReturned;
+                if ($returnedDiff != 0) {
+                    if ($returnedDiff > 0) {
+                        // More items returned, add to stock
+                        StockMutation::record(
+                            $item,
+                            StockMutation::TYPE_IN,
+                            $returnedDiff,
+                            "Koreksi pengembalian: {$materialRequest->project_name}",
+                            MaterialRequest::class,
+                            $materialRequest->id
+                        );
+                    } else {
+                        // Less items returned, reduce from stock
+                        StockMutation::record(
+                            $item,
+                            StockMutation::TYPE_OUT,
+                            abs($returnedDiff),
+                            "Koreksi pengembalian: {$materialRequest->project_name}",
+                            MaterialRequest::class,
+                            $materialRequest->id
+                        );
+                    }
+                }
+
+                // Record damage changes if any
+                $damagedDiff = $newDamaged - $oldDamaged;
+                if ($damagedDiff > 0) {
+                    StockMutation::record(
+                        $item,
+                        StockMutation::TYPE_DAMAGED,
+                        $damagedDiff,
+                        "Koreksi rusak: {$materialRequest->project_name}",
+                        MaterialRequest::class,
+                        $materialRequest->id
+                    );
+                }
+
+                // Record lost changes if any
+                $lostDiff = $newLost - $oldLost;
+                if ($lostDiff > 0) {
+                    StockMutation::record(
+                        $item,
+                        StockMutation::TYPE_LOST,
+                        $lostDiff,
+                        "Koreksi hilang: {$materialRequest->project_name}",
+                        MaterialRequest::class,
+                        $materialRequest->id
+                    );
+                }
+
+                // Update request item
+                $requestItem->update([
+                    'qty_used' => $itemData['qty_used'],
+                    'qty_returned' => $newReturned,
+                    'qty_damaged' => $newDamaged,
+                    'qty_lost' => $newLost,
+                    'notes' => $itemData['notes'] ?? null,
+                ]);
+            }
+        });
+
+        return redirect()->route('requests.show', $materialRequest)
+            ->with('success', 'Data rekonsiliasi berhasil diperbarui.');
     }
 }

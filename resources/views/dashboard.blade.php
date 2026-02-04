@@ -100,7 +100,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                             </svg>
                         </div>
-                        <h2 class="font-semibold text-slate-800">Proyek / Request Aktif</h2>
+                        <h2 class="font-semibold text-slate-800">Barang keluar / Proyek aktif</h2>
                     </div>
                     <a href="{{ route('requests.index') }}" class="text-sm font-medium text-[#006600] hover:text-[#1c2a18]">
                         Lihat Semua →
@@ -108,7 +108,7 @@
                 </div>
                 
                 <div class="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
-                    @forelse($recentRequests as $request)
+                    @forelse($activeRequests as $request)
                     <div x-data="{ open: false }" class="p-3 hover:bg-slate-50/50 transition-colors">
                         <!-- Request Header -->
                         <div class="flex items-center justify-between">
@@ -219,6 +219,131 @@
                         <a href="{{ route('requests.create') }}" class="inline-flex items-center gap-1 text-sm font-medium text-[#006600] hover:text-[#1c2a18]">
                             + Buat Request Baru
                         </a>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Riwayat Proyek (Completed) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mt-6">
+                <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="p-1.5 bg-slate-100 rounded-lg">
+                            <svg class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 class="font-semibold text-slate-800">Riwayat Proyek</h2>
+                    </div>
+                    <a href="{{ route('requests.index') }}?status=closed" class="text-sm font-medium text-[#006600] hover:text-[#1c2a18]">
+                        Lihat Semua →
+                    </a>
+                </div>
+                
+                <div class="divide-y divide-slate-100 max-h-[300px] overflow-y-auto">
+                    @forelse($completedRequests as $request)
+                    <div x-data="{ open: false }" class="p-3 hover:bg-slate-50/50 transition-colors">
+                        <!-- Request Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('requests.show', $request) }}" class="font-medium text-slate-800 hover:text-[#006600] truncate text-sm">
+                                        {{ $request->project_name }}
+                                    </a>
+                                    <span class="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                        {{ $request->status_label }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    {{ $request->technician_name }} • Selesai {{ $request->updated_at->diffForHumans() }}
+                                    <span class="text-slate-400">• {{ $request->items->count() }} barang</span>
+                                </p>
+                            </div>
+                            
+                            <!-- Dropdown Toggle -->
+                            <button @click="open = !open" 
+                                    class="ml-3 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                                    :class="{ 'bg-slate-100 text-slate-600': open }">
+                                <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Collapsible Items Panel -->
+                        <div x-show="open" 
+                             x-collapse
+                             x-cloak
+                             class="mt-3">
+                            <div class="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
+                                @if($request->items->count() > 0)
+                                <table class="w-full text-xs">
+                                    <thead>
+                                        <tr class="bg-slate-100 text-left">
+                                            <th class="px-3 py-2 font-medium text-slate-600">Barang</th>
+                                            <th class="px-3 py-2 font-medium text-slate-600 text-center">Req</th>
+                                            <th class="px-3 py-2 font-medium text-slate-600 text-center">Out</th>
+                                            <th class="px-3 py-2 font-medium text-slate-600">Kondisi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200 bg-white">
+                                        @foreach($request->items as $reqItem)
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="px-3 py-2">
+                                                <div class="flex items-center gap-1.5">
+                                                    @if($reqItem->item)
+                                                        @if($reqItem->item->item_type === 'tools')
+                                                            <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                                        @else
+                                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                                        @endif
+                                                        <span class="font-medium text-slate-700">{{ Str::limit($reqItem->item->name, 25) }}</span>
+                                                    @else
+                                                        <span class="text-slate-400 italic">-</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="px-3 py-2 text-center font-medium text-slate-700">{{ $reqItem->qty_requested }}</td>
+                                            <td class="px-3 py-2 text-center">
+                                                @if($reqItem->qty_out)
+                                                    <span class="font-medium text-slate-700">{{ $reqItem->qty_out }}</span>
+                                                @else
+                                                    <span class="text-slate-400">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                @if($reqItem->condition_out)
+                                                    <span class="px-1.5 py-0.5 text-xs rounded 
+                                                        @if($reqItem->condition_out === 'good') bg-green-100 text-green-700
+                                                        @elseif($reqItem->condition_out === 'fair') bg-yellow-100 text-yellow-700
+                                                        @else bg-red-100 text-red-700
+                                                        @endif">
+                                                        {{ ucfirst($reqItem->condition_out) }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-slate-400">-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                @else
+                                <div class="p-3 text-center text-slate-500 text-xs">
+                                    Tidak ada barang
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="p-6 text-center">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-slate-100 rounded-full mb-3">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <p class="text-slate-500 text-sm">Belum ada proyek selesai</p>
                     </div>
                     @endforelse
                 </div>
