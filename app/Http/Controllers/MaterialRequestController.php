@@ -173,6 +173,12 @@ class MaterialRequestController extends Controller
             ]);
         });
 
+        // Redirect based on user role
+        if (auth()->user()->role === 'technician') {
+            return redirect()->route('technician.projects.show', $materialRequest)
+                ->with('success', 'Checkout berhasil! Barang telah dikeluarkan dari gudang.');
+        }
+
         return redirect()->route('requests.show', $materialRequest)
             ->with('success', 'Checkout berhasil! Barang telah dikeluarkan dari gudang.');
     }
@@ -187,6 +193,11 @@ class MaterialRequestController extends Controller
         }
 
         $materialRequest->load(['items.item.category']);
+
+        // Return technician view for technician users
+        if (auth()->user()->role === 'technician') {
+            return view('technician.checkin', compact('materialRequest'));
+        }
 
         return view('requests.checkin', compact('materialRequest'));
     }
@@ -291,6 +302,12 @@ class MaterialRequestController extends Controller
                 'checkin_at' => now(),
             ]);
         });
+
+        // Redirect based on user role
+        if (auth()->user()->role === 'technician') {
+            return redirect()->route('technician.projects.show', $materialRequest)
+                ->with('success', 'Check-in selesai! Rekonsiliasi berhasil dicatat.');
+        }
 
         return redirect()->route('requests.show', $materialRequest)
             ->with('success', 'Check-in selesai! Rekonsiliasi berhasil dicatat.');

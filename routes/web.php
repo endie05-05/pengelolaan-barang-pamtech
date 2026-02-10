@@ -24,6 +24,11 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($credentials, $request->filled('remember'))) {
         $request->session()->regenerate();
+
+        if (Auth::user()->role === 'technician') {
+            return redirect()->intended(route('technician.dashboard'));
+        }
+
         return redirect()->intended('dashboard');
     }
 
@@ -68,6 +73,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/stock-movement/pdf', [ReportController::class, 'exportStockMovementPdf'])->name('stock-movement.pdf');
         
         Route::get('/tool-utilization', [ReportController::class, 'toolUtilization'])->name('tool-utilization');
+    });
+
+    // Technician Routes
+    Route::prefix('technician')->name('technician.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\TechnicianController::class, 'dashboard'])->name('dashboard');
+        Route::get('/requests/create', [\App\Http\Controllers\TechnicianController::class, 'createRequest'])->name('requests.create');
+        Route::post('/requests', [\App\Http\Controllers\TechnicianController::class, 'storeRequest'])->name('requests.store');
+        Route::get('/projects/{materialRequest}', [\App\Http\Controllers\TechnicianController::class, 'showProject'])->name('projects.show');
+        
+        // Read-only access to items and reports
+        Route::get('/items', [\App\Http\Controllers\TechnicianController::class, 'items'])->name('items');
+        Route::get('/reports', [\App\Http\Controllers\TechnicianController::class, 'reports'])->name('reports');
     });
 });
 

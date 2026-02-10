@@ -111,56 +111,119 @@
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Tanggal</th>
-                                <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Barang</th>
-                                <th class="text-center px-6 py-4 text-sm font-semibold text-slate-600">Tipe</th>
-                                <th class="text-center px-6 py-4 text-sm font-semibold text-slate-600">Jumlah</th>
-                                <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Alasan</th>
-                                <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Oleh</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($lossMutations as $mutation)
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 text-slate-600">{{ $mutation->created_at->format('d M Y H:i') }}</td>
-                                <td class="px-6 py-4">
-                                    <div class="font-medium text-slate-800">{{ $mutation->item->name }}</div>
-                                    <div class="text-sm text-slate-500">{{ $mutation->item->code }}</div>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="px-3 py-1 text-xs font-medium rounded-full {{ $mutation->type === 'damaged' ? 'bg-red-100 text-red-800' : 'bg-slate-800 text-white' }}">
-                                        {{ $mutation->type_label }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-center font-bold text-slate-800">{{ $mutation->qty }}</td>
-                                <td class="px-6 py-4 text-slate-600">{{ $mutation->reason ?? '-' }}</td>
-                                <td class="px-6 py-4 text-slate-600">{{ $mutation->creator->name ?? '-' }}</td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center">
-                                    <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p class="mt-4 text-slate-500">Tidak ada data kerusakan/kehilangan</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+            <!-- Section 1: Barang Habis Pakai (Consumables) -->
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    Barang Habis Pakai (Consumables)
+                </h2>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Tanggal</th>
+                                    <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Barang</th>
+                                    <th class="text-center px-6 py-4 text-sm font-semibold text-slate-600">Tipe</th>
+                                    <th class="text-center px-6 py-4 text-sm font-semibold text-slate-600">Jumlah</th>
+                                    <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Alasan</th>
+                                    <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Oleh</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse($lossMutationsConsumables as $mutation)
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-slate-600">{{ $mutation->created_at->format('d M Y H:i') }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-medium text-slate-800">{{ $mutation->item->name }}</div>
+                                        <div class="text-sm text-slate-500">{{ $mutation->item->code }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="px-3 py-1 text-xs font-medium rounded-full {{ $mutation->type === 'damaged' ? 'bg-red-100 text-red-800' : 'bg-slate-800 text-white' }}">
+                                            {{ $mutation->type_label }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center font-bold text-slate-800">{{ $mutation->qty }}</td>
+                                    <td class="px-6 py-4 text-slate-600">{{ $mutation->reason ?? '-' }}</td>
+                                    <td class="px-6 py-4 text-slate-600">{{ $mutation->creator->name ?? '-' }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-slate-500">
+                                        Tidak ada data kerusakan/kehilangan untuk consumables.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
 
-                @if($lossMutations->hasPages())
-                <div class="px-6 py-4 border-t border-slate-200">
-                    {{ $lossMutations->appends(['tab' => 'loss_damage'])->links() }}
+                    @if($lossMutationsConsumables->hasPages())
+                    <div class="px-6 py-4 border-t border-slate-200">
+                        {{ $lossMutationsConsumables->appends(['tab' => 'loss_damage'])->links() }}
+                    </div>
+                    @endif
                 </div>
-                @endif
+            </div>
+
+            <!-- Section 2: Tools & Equipment -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Alat & Inventaris (Tools & Equipment)
+                </h2>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Tanggal</th>
+                                    <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Barang</th>
+                                    <th class="text-center px-6 py-4 text-sm font-semibold text-slate-600">Tipe</th>
+                                    <th class="text-center px-6 py-4 text-sm font-semibold text-slate-600">Jumlah</th>
+                                    <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Alasan</th>
+                                    <th class="text-left px-6 py-4 text-sm font-semibold text-slate-600">Oleh</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse($lossMutationsTools as $mutation)
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-slate-600">{{ $mutation->created_at->format('d M Y H:i') }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-medium text-slate-800">{{ $mutation->item->name }}</div>
+                                        <div class="text-sm text-slate-500">{{ $mutation->item->code }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="px-3 py-1 text-xs font-medium rounded-full {{ $mutation->type === 'damaged' ? 'bg-red-100 text-red-800' : 'bg-slate-800 text-white' }}">
+                                            {{ $mutation->type_label }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center font-bold text-slate-800">{{ $mutation->qty }}</td>
+                                    <td class="px-6 py-4 text-slate-600">{{ $mutation->reason ?? '-' }}</td>
+                                    <td class="px-6 py-4 text-slate-600">{{ $mutation->creator->name ?? '-' }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-slate-500">
+                                        Tidak ada data kerusakan/kehilangan untuk tools.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if($lossMutationsTools->hasPages())
+                    <div class="px-6 py-4 border-t border-slate-200">
+                        {{ $lossMutationsTools->appends(['tab' => 'loss_damage'])->links() }}
+                    </div>
+                    @endif
+                </div>
             </div>
         </div>
 

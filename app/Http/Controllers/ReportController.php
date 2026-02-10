@@ -17,20 +17,31 @@ class ReportController extends Controller
         $activeTab = $request->input('tab', 'loss_damage');
 
         // --- 1. Loss & Damage Data ---
-        $lossQuery = StockMutation::with(['item.category', 'creator'])
+        $lossBaseQuery = StockMutation::with(['item.category', 'creator'])
             ->whereIn('type', [StockMutation::TYPE_DAMAGED, StockMutation::TYPE_LOST]);
 
         if ($request->filled('start_date')) {
-            $lossQuery->whereDate('created_at', '>=', $request->start_date);
+            $lossBaseQuery->whereDate('created_at', '>=', $request->start_date);
         }
         if ($request->filled('end_date')) {
-            $lossQuery->whereDate('created_at', '<=', $request->end_date);
+            $lossBaseQuery->whereDate('created_at', '<=', $request->end_date);
         }
         if ($request->filled('type') && in_array($request->type, [StockMutation::TYPE_DAMAGED, StockMutation::TYPE_LOST])) {
-            $lossQuery->where('type', $request->type);
+            $lossBaseQuery->where('type', $request->type);
         }
 
-        $lossMutations = $lossQuery->latest()->paginate(10, ['*'], 'loss_page');
+        // Clone for separate lists
+        $consumableQuery = clone $lossBaseQuery;
+        $toolQuery = clone $lossBaseQuery;
+
+        $lossMutationsConsumables = $consumableQuery->whereHas('item', function ($q) {
+            $q->where('item_type', Item::TYPE_MATERIALS);
+        })->latest()->paginate(10, ['*'], 'page_consumables');
+
+        $lossMutationsTools = $toolQuery->whereHas('item', function ($q) {
+            $q->whereIn('item_type', [Item::TYPE_TOOLS, Item::TYPE_EQUIPMENT]);
+        })->latest()->paginate(10, ['*'], 'page_tools');
+
         $lossSummary = [
             'total_damaged' => StockMutation::where('type', StockMutation::TYPE_DAMAGED)
                 ->when($request->start_date, fn($q) => $q->whereDate('created_at', '>=', $request->start_date))
@@ -78,7 +89,7 @@ class ReportController extends Controller
 
         return view('reports.index', compact(
             'activeTab',
-            'lossMutations', 'lossSummary',
+            'lossMutationsConsumables', 'lossMutationsTools', 'lossSummary',
             'stockMutations', 'items',
             'tools'
         ));
@@ -88,23 +99,35 @@ class ReportController extends Controller
      */
     public function lossAndDamage(Request $request)
     {
-        $query = StockMutation::with(['item.category', 'creator'])
+        $baseQuery = StockMutation::with(['item.category', 'creator'])
             ->whereIn('type', [StockMutation::TYPE_DAMAGED, StockMutation::TYPE_LOST]);
 
         // Filter by date range
         if ($request->filled('start_date')) {
-            $query->whereDate('created_at', '>=', $request->start_date);
+            $baseQuery->whereDate('created_at', '>=', $request->start_date);
         }
         if ($request->filled('end_date')) {
-            $query->whereDate('created_at', '<=', $request->end_date);
+            $baseQuery->whereDate('created_at', '<=', $request->end_date);
         }
 
         // Filter by type
         if ($request->filled('type')) {
-            $query->where('type', $request->type);
+            $baseQuery->where('type', $request->type);
         }
 
-        $mutations = $query->latest()->paginate(20);
+        // Clone query for separte lists
+        $consumableQuery = clone $baseQuery;
+        $toolQuery = clone $baseQuery;
+
+        // 1. Barang Habis Pakai (Consumables/Materials)
+        $consumableMutations = $consumableQuery->whereHas('item', function ($q) {
+            $q->where('item_type', Item::TYPE_MATERIALS);
+        })->latest()->paginate(10, ['*'], 'page_consumables');
+
+        // 2. Tools & Equipment
+        $toolMutations = $toolQuery->whereHas('item', function ($q) {
+            $q->whereIn('item_type', [Item::TYPE_TOOLS, Item::TYPE_EQUIPMENT]);
+        })->latest()->paginate(10, ['*'], 'page_tools');
 
         // Summary stats
         $summary = [
@@ -118,7 +141,7 @@ class ReportController extends Controller
                 ->sum('qty'),
         ];
 
-        return view('reports.loss-damage', compact('mutations', 'summary'));
+        return view('reports.loss-damage', compact('consumableMutations', 'toolMutations', 'summary'));
     }
 
     /**
@@ -236,7 +259,16 @@ class ReportController extends Controller
             $query->where('type', $request->type);
         }
 
-        $mutations = $query->latest()->get(); // Get all data
+        $allMutations = $query->latest()->get(); 
+
+        // Split into Consumables and Tools
+        $consumableMutations = $allMutations->filter(function ($mutation) {
+            return $mutation->item->item_type === Item::TYPE_MATERIALS;
+        });
+
+        $toolMutations = $allMutations->filter(function ($mutation) {
+            return in_array($mutation->item->item_type, [Item::TYPE_TOOLS, Item::TYPE_EQUIPMENT]);
+        });
 
         $summary = [
             'total_damaged' => StockMutation::where('type', StockMutation::TYPE_DAMAGED)
@@ -249,7 +281,7 @@ class ReportController extends Controller
                 ->sum('qty'),
         ];
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.pdf.loss-damage', compact('mutations', 'summary'));
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.pdf.loss-damage', compact('consumableMutations', 'toolMutations', 'summary'));
         return $pdf->download('laporan-loss-damage-' . date('Y-m-d') . '.pdf');
     }
 
@@ -291,16 +323,24 @@ class ReportController extends Controller
         $endDate = $request->end_date;
 
         // 1. Loss & Damage Data
-        $lossMutations = StockMutation::with(['item.category', 'creator'])
+        $allLossMutations = StockMutation::with(['item.category', 'creator'])
             ->whereIn('type', [StockMutation::TYPE_DAMAGED, StockMutation::TYPE_LOST])
             ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
             ->latest()
             ->get();
 
+        $lossMutationsConsumables = $allLossMutations->filter(function ($mutation) {
+            return $mutation->item->item_type === Item::TYPE_MATERIALS;
+        });
+
+        $lossMutationsTools = $allLossMutations->filter(function ($mutation) {
+            return in_array($mutation->item->item_type, [Item::TYPE_TOOLS, Item::TYPE_EQUIPMENT]);
+        });
+
         $lossSummary = [
-            'total_damaged' => $lossMutations->where('type', StockMutation::TYPE_DAMAGED)->sum('qty'),
-            'total_lost' => $lossMutations->where('type', StockMutation::TYPE_LOST)->sum('qty'),
+            'total_damaged' => $allLossMutations->where('type', StockMutation::TYPE_DAMAGED)->sum('qty'),
+            'total_lost' => $allLossMutations->where('type', StockMutation::TYPE_LOST)->sum('qty'),
         ];
 
         // 2. Stock Movement Data
@@ -326,7 +366,8 @@ class ReportController extends Controller
             ->get();
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.pdf.unified', compact(
-            'lossMutations', 
+            'lossMutationsConsumables',
+            'lossMutationsTools', 
             'lossSummary', 
             'stockMutations', 
             'tools',

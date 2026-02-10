@@ -1,18 +1,41 @@
 <x-app-layout>
-    <div class="space-y-6" x-data="{ activeTab: '{{ $activeTab }}' }">
+    <div class="space-y-6" x-data="{ activeTab: '{{ $activeTab }}', foundItem: null }" 
+        @barcode-scanned.window="findItemByBarcode($event.detail.barcode)">
         <!-- Header with Actions -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">Daftar Barang</h1>
                 <p class="text-slate-600 mt-1">Kelola inventory barang gudang</p>
             </div>
-            <a href="{{ route('items.create') }}" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 border border-transparent rounded-lg font-semibold text-sm text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
-                <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Tambah Barang
-            </a>
+            <div class="flex items-center gap-3">
+                <x-barcode-scanner inputId="item-search-barcode" />
+                <a href="{{ route('items.create') }}" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 border border-transparent rounded-lg font-semibold text-sm text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
+                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Tambah Barang
+                </a>
+            </div>
         </div>
+
+        <!-- Found Item Alert -->
+        <template x-if="foundItem">
+            <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Barang ditemukan: <strong x-text="foundItem"></strong></span>
+                </div>
+                <button @click="foundItem = null" class="text-green-600 hover:text-green-800">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </template>
+
+        <input type="hidden" id="item-search-barcode">
 
         <!-- Filters -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -89,7 +112,11 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
                             @forelse($items as $item)
-                                <tr class="hover:bg-slate-50 transition">
+                                <tr class="hover:bg-slate-50 transition item-row" 
+                                    data-barcode="{{ $item->barcode }}" 
+                                    data-code="{{ $item->code }}" 
+                                    data-name="{{ $item->name }}"
+                                    data-tab="items">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-xs text-slate-500">{{ $item->code }}</div>
                                         <div class="text-sm font-medium text-slate-900">{{ $item->name }}</div>
@@ -155,7 +182,11 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
                             @forelse($tools as $tool)
-                                <tr class="hover:bg-slate-50 transition">
+                                <tr class="hover:bg-slate-50 transition item-row" 
+                                    data-barcode="{{ $tool->barcode }}" 
+                                    data-code="{{ $tool->code }}" 
+                                    data-name="{{ $tool->name }}"
+                                    data-tab="tools">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-3">
                                             <div class="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
@@ -218,4 +249,54 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function findItemByBarcode(barcode) {
+            const rows = document.querySelectorAll('.item-row');
+            let found = false;
+            let targetRow = null;
+            let targetTab = null;
+
+            rows.forEach(row => {
+                // Remove previous highlights
+                row.classList.remove('ring-2', 'ring-green-500', 'bg-green-100');
+                
+                if (row.dataset.barcode === barcode || row.dataset.code === barcode) {
+                    targetRow = row;
+                    targetTab = row.dataset.tab;
+                    found = true;
+                }
+            });
+
+            if (found && targetRow) {
+                // Switch to correct tab if needed
+                const alpineData = Alpine.$data(document.querySelector('[x-data]'));
+                if (alpineData && alpineData.activeTab !== targetTab) {
+                    alpineData.activeTab = targetTab;
+                    // Wait for tab transition
+                    setTimeout(() => highlightRow(targetRow, alpineData), 300);
+                } else {
+                    highlightRow(targetRow, alpineData);
+                }
+            } else {
+                alert('Barang dengan barcode "' + barcode + '" tidak ditemukan dalam daftar.');
+            }
+        }
+
+        function highlightRow(row, alpineData) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.classList.add('ring-2', 'ring-green-500', 'bg-green-100');
+            
+            if (alpineData) {
+                alpineData.foundItem = row.dataset.name;
+            }
+            
+            setTimeout(() => {
+                row.classList.remove('ring-2', 'ring-green-500', 'bg-green-100');
+                if (alpineData) {
+                    alpineData.foundItem = null;
+                }
+            }, 4000);
+        }
+    </script>
 </x-app-layout>

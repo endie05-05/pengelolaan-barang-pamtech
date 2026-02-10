@@ -217,7 +217,7 @@
                         </div>
                         <p class="text-slate-500 text-sm mb-2">Belum ada request</p>
                         <a href="{{ route('requests.create') }}" class="inline-flex items-center gap-1 text-sm font-medium text-[#006600] hover:text-[#1c2a18]">
-                            + Buat Request Baru
+                            + Buat Proyek Baru
                         </a>
                     </div>
                     @endforelse
@@ -405,7 +405,7 @@
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        Request
+                        Proyek Baru
                     </a>
                     <a href="{{ route('items.create') }}" class="flex items-center gap-2 px-3 py-2 bg-white text-slate-700 text-xs font-medium rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

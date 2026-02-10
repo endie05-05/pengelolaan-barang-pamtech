@@ -23,7 +23,9 @@
         <strong>Total Hilang:</strong> {{ $lossSummary['total_lost'] }} items
     </div>
 
-    <table class="data">
+    {{-- SECTION 1.1: CONSUMABLES --}}
+    <h4 style="margin-top: 20px; color: #333;">Barang Habis Pakai (Consumables)</h4>
+    <table class="data" style="margin-bottom: 20px;">
         <thead>
             <tr>
                 <th style="width: 20%">Tanggal</th>
@@ -35,7 +37,7 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($lossMutations as $mutation)
+            @forelse($lossMutationsConsumables as $mutation)
             <tr>
                 <td>{{ $mutation->created_at->format('d/m/Y H:i') }}</td>
                 <td>
@@ -55,7 +57,47 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6" style="text-align: center; padding: 15px; color: #666;">Tidak ada data kerusakan atau kehilangan.</td>
+                <td colspan="6" style="text-align: center; padding: 15px; color: #666;">Tidak ada data.</td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{-- SECTION 1.2: TOOLS --}}
+    <h4 style="color: #333;">Alat & Inventaris (Tools)</h4>
+    <table class="data">
+        <thead>
+            <tr>
+                <th style="width: 20%">Tanggal</th>
+                <th style="width: 25%">Barang</th>
+                <th style="width: 10%">Tipe</th>
+                <th style="width: 10%">Jumlah</th>
+                <th style="width: 20%">Alasan</th>
+                <th style="width: 15%">Dicatat Oleh</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($lossMutationsTools as $mutation)
+            <tr>
+                <td>{{ $mutation->created_at->format('d/m/Y H:i') }}</td>
+                <td>
+                    <strong>{{ $mutation->item->name }}</strong><br>
+                    <small style="color: #666;">{{ $mutation->item->code }}</small>
+                </td>
+                <td style="text-align: center;">
+                    @if($mutation->type === 'damaged')
+                        <span class="badge badge-red">Rusak</span>
+                    @else
+                        <span class="badge badge-gray">Hilang</span>
+                    @endif
+                </td>
+                <td style="text-align: center;">{{ $mutation->qty }}</td>
+                <td>{{ $mutation->reason ?? '-' }}</td>
+                <td>{{ $mutation->creator->name ?? '-' }}</td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 15px; color: #666;">Tidak ada data.</td>
             </tr>
             @endforelse
         </tbody>

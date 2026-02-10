@@ -101,11 +101,11 @@
             <div class="border-t border-slate-200 p-4">
                 <div class="flex items-center">
                     <div class="h-10 w-10 rounded-full flex items-center justify-center text-[#006600] font-bold text-sm" style="background-color: #6eea8e33;">
-                        AD
+                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 2)) }}
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm font-medium text-slate-700">Admin User</p>
-                        <p class="text-xs text-slate-500">admin@pamtech.com</p>
+                        <p class="text-sm font-medium text-slate-700">{{ Auth::user()->name ?? 'User' }}</p>
+                        <p class="text-xs text-slate-500">{{ Auth::user()->email ?? '' }}</p>
                     </div>
                 </div>
             </div>

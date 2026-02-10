@@ -34,7 +34,19 @@
                     @enderror
                 </div>
 
-
+                <!-- Barcode with Scanner -->
+                <div x-data="{ barcode: '{{ old('barcode', '') }}' }">
+                    <label for="barcode" class="block text-sm font-medium text-slate-700 mb-1">Barcode</label>
+                    <div class="flex gap-3">
+                        <input type="text" name="barcode" id="barcode" x-model="barcode" placeholder="Scan atau ketik barcode..."
+                            class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <x-barcode-scanner inputId="barcode" />
+                    </div>
+                    @error('barcode')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    <p class="text-xs text-slate-500 mt-1">Optional. Klik tombol Scan untuk menggunakan kamera.</p>
+                </div>
 
                 <!-- Unit -->
                 <div>
